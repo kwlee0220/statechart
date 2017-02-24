@@ -6,7 +6,7 @@ import async.AsyncOperationState;
  * 
  * @author Kang-Woo Lee (ETRI)
  */
-public interface FinalState {
+public interface FinalState extends State {
 	public AsyncOperationState getAsyncOperationState();
 	public void setAsyncOperationState(AsyncOperationState state);
 	

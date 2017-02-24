@@ -14,7 +14,7 @@ public class FaultRaisedEvent extends StatechartEvent {
 	private final StatechartFaultCase m_faultCase;
 	private final Event m_event;
 
-	public FaultRaisedEvent(Throwable fault, State<?> throwState, State<?> toState,
+	public FaultRaisedEvent(Throwable fault, State throwState, State toState,
 							StatechartFaultCase faultCase, Event event) {
 		m_fault = fault;
 		m_throwStateId = throwState.getGuid();

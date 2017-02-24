@@ -16,7 +16,7 @@ public class EventHandledEvent extends StatechartEvent {
 	private final String m_toStateId;
 	private final Event m_event;
 
-	public EventHandledEvent(Event event, State<?> reactState, String toStateId) {
+	public EventHandledEvent(Event event, State reactState, String toStateId) {
 		m_reactStateId = reactState.getGuid();
 		m_toStateId = toStateId;
 		m_event = event;

@@ -1,11 +1,10 @@
 package camus.statechart.groovy
 
-import java.awt.Desktop.Action
-
 import camus.statechart.State
 import camus.statechart.StateNotFoundException
 import camus.statechart.Statechart
-import camus.statechart.StatechartContext
+import camus.statechart.StatechartExecution
+import camus.statechart.support.AbstractState
 
 import event.Event
 
@@ -14,70 +13,14 @@ import event.Event
  * 
  * @author Kang-Woo Lee (ETRI)
  */
-class GState implements State<GState> {
-	final GState parentState
-	final String guid
-	final String luid
-	String defaultStateId
+class GState<C extends StatechartExecution<C>> extends AbstractState<C> implements State<C> {
 	Closure entry
 	Closure exit
-	Map<String,GState> childStates = [:]
 	List<Transition> transitions = []
 	
-	boolean keepHistory
-	GState recentChildState
-	GState exceptionChildState
-	
-	GState(GState parentState, String guid, String luid) {
-		this.parentState = parentState
-		this.guid = guid
-		this.luid = luid
-	}
-
-	@Override
-	public Statechart<GState> getStatechart() {
-		return statechart;
-	}
-	
-	@Override
-	public GState getInitialChildState() {
-		childStates[defaultStateId]
-	}
-	
-	@Override
-	public Collection<GState> getChildStates() {
-		this.childStates.values()
-	}
-
-	@Override
-	public GState getChildState(String luid) {
-		childStates[luid];
-	}
-	
-	def addChildState(GState child) {
-		childStates[child.luid] = child
-	}
-
-	@Override
-	public GState traverse(String path) {
-		String[] parts = path.split("/");
-		
-		path.split("/").inject(this) { GState current, String pathSeg ->
-			switch ( pathSeg ) {
-				case "..":
-					current.parentState
-					break;
-				case ".":
-					current;
-					break;
-				case "":
-					current.statechart.rootState
-					break;
-				default:
-					current.childStates[pathSeg]
-					break;
-			}
-		}
+	GState(Statechart schart, State parentState, String guid, boolean keepHistory,
+			String exceptionChildStateId) {
+		super(schart, parentState, guid, keepHistory, exceptionChildStateId)
 	}
 	
 	GState getAt(String path) {
@@ -104,19 +47,19 @@ class GState implements State<GState> {
 	}
 
 	@Override
-	public GState enter(StatechartContext context) {
+	public State<C> enter(C context) {
 		(entry) ? entry.call() : null
 	}
 
 	@Override
-	public void leave(StatechartContext context) {
+	public void leave(C context) {
 		if ( exit ) {
 			exit.call(context)
 		}
 	}
 
 	@Override
-	public String handleEvent(StatechartContext context, Event event) {
+	public State<C> handleEvent(C context, Event event) {
 		for ( Transition trans: transitions ) {
 			def matched = trans.cond(context, event)
 			if ( matched ) {
@@ -129,31 +72,6 @@ class GState implements State<GState> {
 		}
 		
 		return null;
-	}
-
-	@Override
-	public GState getRecentChildState() {
-		return keepHistory ? recentChildState : null
-	}
-
-	@Override
-	public void setRecentChildState(GState child) {
-		recentChildState = (keepHistory) ? child : null
-	}
-
-	@Override
-	public boolean isAncestorOf(GState state) {
-		state.guid.startsWith(guid)
-	}
-
-	@Override
-	public GState getExceptionState() {
-		return exceptionState;
-	}
-	
-	@Override
-	public String toString() {
-		"State[${guid}]"
 	}
 }
 

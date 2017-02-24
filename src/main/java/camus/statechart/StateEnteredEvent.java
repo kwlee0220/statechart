@@ -8,7 +8,7 @@ package camus.statechart;
 public class StateEnteredEvent extends StatechartEvent {
 	private final String m_stateId;
 
-	public StateEnteredEvent(State<?> state) {
+	public StateEnteredEvent(State state) {
 		m_stateId = state.getGuid();
 	}
 

@@ -10,7 +10,7 @@ package camus.statechart;
 public class StateBouncedEvent extends StatechartEvent {
 	private final String m_stateId;
 
-	public StateBouncedEvent(State<?> state) {
+	public StateBouncedEvent(State state) {
 		m_stateId = state.getGuid();
 	}
 

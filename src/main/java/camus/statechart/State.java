@@ -8,12 +8,10 @@ import event.Event;
  * 
  * @author Kang-Woo Lee (ETRI)
  */
-public interface State<T extends State<T>> {
-	public static final String STAY = "$$stay";
+public interface State<C extends StatechartExecution<C>> {
+	public static final String FINISH_STATE_GUID = "/finished";
 	
-	public Statechart<T> getStatechart();
-	
-	public T getParentState();
+	public State<C> getParentState();
 	public String getGuid();
 	public String getLuid();
 	
@@ -24,20 +22,76 @@ public interface State<T extends State<T>> {
 		return this instanceof FinalState;
 	}
 	
-	public T getInitialChildState();
-	public T getChildState(String luid);
-	public Collection<T> getChildStates();
-	public boolean isAncestorOf(T state);
-	public T traverse(String path);
+	public State<C> getInitialChildState();
+	public State<C> getChildState(String luid);
+	public Collection<State<C>> getChildStates();
+	public boolean isAncestorOf(State<C> state);
 	
-	public T getRecentChildState();
-	public void setRecentChildState(T child);
+	public State<C> getRecentChildState();
+	public void setRecentChildState(String stateId);
 	
-	public T getExceptionState();
+	public State<C> getExceptionState();
 	
-	public default T enter(StatechartContext context) {
+	public default State<C> enter(C context) {
 		return null;
 	}
-	public default void leave(StatechartContext context) { }
-	public String handleEvent(StatechartContext context, Event event);
+	public default void leave(C context) { }
+	public State<C> handleEvent(C context, Event event);
+	
+	public static final State STOP_PROPAGATE = new State() {
+		@Override
+		public State getParentState() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public String getGuid() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public String getLuid() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public State getInitialChildState() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public State getChildState(String luid) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Collection<State> getChildStates() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public boolean isAncestorOf(State state) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public State getRecentChildState() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void setRecentChildState(String stateId) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public State getExceptionState() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public State handleEvent(StatechartExecution context, Event event) {
+			return null;
+		}
+	};
 }

@@ -12,10 +12,10 @@ import camus.statechart.FaultRaisedEvent;
 import camus.statechart.FinalState;
 import camus.statechart.State;
 import camus.statechart.StateBouncedEvent;
+import camus.statechart.StatechartExecution;
 import camus.statechart.StateEnteredEvent;
 import camus.statechart.StateLeftEvent;
 import camus.statechart.Statechart;
-import camus.statechart.StatechartContext;
 import camus.statechart.StatechartEvent;
 import camus.statechart.StatechartFaultCase;
 import camus.statechart.StatechartFinishedEvent;
@@ -39,19 +39,19 @@ import utils.Utilities;
  *
  * @author Kang-Woo Lee (ETRI)
  */
-public class StatechartExecutor<STATE extends State<STATE>> implements EventSubscriber {
+public class StatechartExecutor<C extends StatechartExecution<C>> implements EventSubscriber {
 	private static final Logger s_logger = LoggerFactory.getLogger(StatechartExecutor.class);
 
-	private final StatechartContext m_context;
-	private final Statechart<STATE> m_schart;
-	private final StatechartEventQueue<STATE> m_eventQueue;
+	private final C m_context;
+	private final Statechart<C> m_schart;
+	private final StatechartEventQueue m_eventQueue;
 	private final Executor m_executor;
 	
 	private final ReentrantLock m_scLock = new ReentrantLock();
 	private final Condition m_scCond = m_scLock.newCondition();
 	@GuardedBy("m_scLock") private boolean m_started = false;
 
-	private final List<STATE> m_path;
+	private final List<State<C>> m_path;
 	private final CopyOnWriteArrayList<StatechartListener> m_listeners
 											= new CopyOnWriteArrayList<StatechartListener>();
 
@@ -61,25 +61,25 @@ public class StatechartExecutor<STATE extends State<STATE>> implements EventSubs
 	 * @param schart		실행 대상 상태차트 객체.
 	 * @param eventQueue	상태차트 진행에 사용될 이벤트를 받을 큐.
 	 */
-	public StatechartExecutor(Statechart<STATE> schart, StatechartContext context, Executor executor) {
+	public StatechartExecutor(C context, Executor executor) {
 		Preconditions.checkArgument(context != null, "StatechartExecution is null");
 		
 		m_context = context;
-		m_schart = schart;
-		m_eventQueue = new StatechartEventQueue<>(this);
+		m_schart = context.getStatechart();
+		m_eventQueue = new StatechartEventQueue(this);
 		m_executor = executor;
 		m_path = Lists.newArrayList();
 	}
-	
-	public StatechartContext getContext() {
+
+	public C getContext() {
 		return m_context;
 	}
 
-	public Statechart<STATE> getStatechart() {
+	public Statechart<C> getStatechart() {
 		return m_schart;
 	}
 
-	public STATE getCurrentState() {
+	public State<C> getCurrentState() {
 		return (m_path.size() > 0) ? m_path.get(m_path.size()-1) : null;
 	}
 
@@ -112,14 +112,14 @@ public class StatechartExecutor<STATE extends State<STATE>> implements EventSubs
 
 		notifyScEvent(new StatechartStartedEvent(m_schart));
 
-		STATE root = m_schart.getRootState();
-		STATE to = enterLeafState(root);
+		State<C> root = m_schart.getRootState();
+		State<C> to = enterLeafState(root);
 		if ( to != null ) {
 			gotoState(to, null);
 		}
 
 		if ( m_path.get(m_path.size()-1).isFinal() ) {
-			final STATE s = m_path.get(m_path.size()-1);
+			final State<C> s = m_path.get(m_path.size()-1);
 			
 			Utilities.executeAsynchronously(m_executor, () -> {
 				if ( s instanceof FinalState ) {
@@ -148,7 +148,7 @@ public class StatechartExecutor<STATE extends State<STATE>> implements EventSubs
 		}
 
 		for ( int i = m_path.size()-1; i >= 0; --i ) {
-			STATE state = m_path.get(i);
+			State<C> state = m_path.get(i);
 			exitIGE(state);
 
 			notifyScEvent(new StateLeftEvent(state));
@@ -202,15 +202,15 @@ public class StatechartExecutor<STATE extends State<STATE>> implements EventSubs
 
 		int idx = m_path.size() -1;
 
-		STATE toState = null;
+		State<C> toState = null;
 		String toStateId =null;
 		for ( ; idx >= 0; --idx ) {
-			STATE state = m_path.get(idx);
+			State<C> state = m_path.get(idx);
 			try {
-				toStateId = state.handleEvent(m_context, event);
+				toState = state.handleEvent(m_context, event);
 			}
 			catch ( Throwable fault ) {
-				STATE faultState = getFaultHandleState(state, fault);
+				State<C> faultState = getFaultHandleState(state, fault);
 				s_logger.warn("fails to handle event: state=" + state + ", event=" + event
 								+ ", cause=" + fault);
 
@@ -220,8 +220,8 @@ public class StatechartExecutor<STATE extends State<STATE>> implements EventSubs
 			
 			notifyScEvent(new EventHandledEvent(event, state, toStateId));
 			if ( toStateId != null ) {
-				if ( !toStateId.equals(State.STAY) ) {
-					toState = state.traverse(toStateId);
+				if ( !toStateId.equals(State.STOP_PROPAGATE) ) {
+					toState = StateChartUtils.traverse(m_schart, state, toStateId);
 					s_logger.info("handled: event={}, state[{}], goto=state[{}]",
 									event, state.getGuid(), toStateId);
 				}
@@ -237,7 +237,7 @@ public class StatechartExecutor<STATE extends State<STATE>> implements EventSubs
 		}
 
 		if ( m_path.get(m_path.size()-1).isFinal() ) {
-			final STATE s = m_path.get(m_path.size()-1);
+			final State<C> s = m_path.get(m_path.size()-1);
 			if ( s instanceof FinalState ) {
 				FinalState fs = (FinalState)s;
 				switch ( fs.getAsyncOperationState() ) {
@@ -262,9 +262,9 @@ public class StatechartExecutor<STATE extends State<STATE>> implements EventSubs
 		return "Statechart[current=" + getCurrentState() + "]";
 	}
 
-	private void gotoState(STATE to, Event causingEvent) {
+	private void gotoState(State<C> to, Event causingEvent) {
 		while ( true ) {
-			STATE current = getCurrentState();
+			State<C> current = getCurrentState();
 
 			if ( current == to ) {
 				if ( to.isComposite() ) {
@@ -272,7 +272,7 @@ public class StatechartExecutor<STATE extends State<STATE>> implements EventSubs
 						to = to.getInitialChildState();
 					}
 					catch ( Throwable fault ) {
-						STATE reactState = to;
+						State<C> reactState = to;
 						to = getFaultHandleState(reactState, fault);
 
 						notifyScEvent(new FaultRaisedEvent(fault, reactState, to,
@@ -295,7 +295,7 @@ public class StatechartExecutor<STATE extends State<STATE>> implements EventSubs
 						to = to.getInitialChildState();
 					}
 					catch ( Throwable fault ) {
-						STATE reactState = to;
+						State<C> reactState = to;
 						to = getFaultHandleState(reactState, fault);
 
 						notifyScEvent(new FaultRaisedEvent(fault, reactState, null,
@@ -336,10 +336,10 @@ public class StatechartExecutor<STATE extends State<STATE>> implements EventSubs
 	 * @return		성공적으로 진입된 경우는 <code>null</code>을 반환하고,
 	 * 				다른 state로 전이가 추천된 경우는 해당 state를 반환한다.
 	 */
-	private STATE enterLeafState(STATE state) {
-		STATE from = getCurrentState();
+	private State<C> enterLeafState(State<C> state) {
+		State<C> from = getCurrentState();
 		while ( true ) {
-			STATE next;
+			State<C> next;
 
 			if ( from != state ) {
 				while ( true ) {
@@ -389,7 +389,7 @@ public class StatechartExecutor<STATE extends State<STATE>> implements EventSubs
 					state = state.getInitialChildState();
 				}
 				catch ( Throwable e ) {
-					STATE raiser = state;
+					State<C> raiser = state;
 					state = getFaultHandleState(raiser, e);
 					
 					notifyScEvent(new FaultRaisedEvent(e, raiser, state,
@@ -411,9 +411,9 @@ public class StatechartExecutor<STATE extends State<STATE>> implements EventSubs
 	 * @param ancestor	대상 조상 state
 	 * @throws	AssertionError	'ancestor'가 현재 상태의 조상이 아닌 경우.
 	 */
-	private void exitUptoAncestor(STATE ancestor) {
+	private void exitUptoAncestor(State<C> ancestor) {
 		for ( int i = m_path.size()-1; i >= 0; --i ) {
-			STATE state = m_path.get(i);
+			State<C> state = m_path.get(i);
 			if ( state == ancestor ) {
 				return;
 			}
@@ -432,10 +432,10 @@ public class StatechartExecutor<STATE extends State<STATE>> implements EventSubs
 								+ ".exitUptoAncestor()");
 	}
 
-	private void exitIGE(STATE state) {
-		STATE parent = state.getParentState();
+	private void exitIGE(State<C> state) {
+		State<C> parent = state.getParentState();
 		if ( parent != null ) {
-			parent.setRecentChildState(state);
+			parent.setRecentChildState(state.getLuid());
 		}
 		
 		try {
@@ -446,8 +446,8 @@ public class StatechartExecutor<STATE extends State<STATE>> implements EventSubs
 		}
 	}
 
-	private STATE getFaultHandleState(STATE state, Throwable fault) {
-		STATE superState = state.getParentState();
+	private State<C> getFaultHandleState(State<C> state, Throwable fault) {
+		State<C> superState = state.getParentState();
 		while ( true ) {
 			if ( superState != null ) {
 				state = superState.getExceptionState();

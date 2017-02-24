@@ -1,13 +1,15 @@
 package camus.statechart.groovy
 
+import camus.statechart.State
 import camus.statechart.StateNotFoundException
 import camus.statechart.Statechart
+import camus.statechart.StatechartExecution
 
 /**
  * 
  * @author Kang-Woo Lee (ETRI)
  */
-class GStatechart implements Statechart<GState>{
+class GStatechart<C extends StatechartExecution<C>> extends Statechart<C> {
 	final GState rootState
 	
 	public static StatechartBuilder builder(Map args, Closure decl) {
@@ -20,6 +22,11 @@ class GStatechart implements Statechart<GState>{
 	
 	GStatechart(GState root) {
 		this.rootState = root
+	}
+
+	@Override
+	public State<C> getState(String guid) {
+		rootState[path];
 	}
 	
 	public GState getAt(String path) throws StateNotFoundException {
