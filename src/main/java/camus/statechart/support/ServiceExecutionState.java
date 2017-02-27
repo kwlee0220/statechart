@@ -6,12 +6,12 @@ import camus.statechart.State;
 import camus.statechart.StatechartExecution;
 
 import com.google.common.base.Preconditions;
+import com.google.common.eventbus.Subscribe;
 
 import async.Service;
 import async.ServiceState;
-import async.ServiceStateChangeListener;
+import async.ServiceStateChangeEvent;
 import event.Event;
-import event.support.EventBuilder;
 
 
 
@@ -159,8 +159,7 @@ public abstract class ServiceExecutionState<C extends StatechartExecution<C>> ex
     	m_svc.stop();
     }
 	
-	private static class EventRelayListener<C extends StatechartExecution<C>>
-														implements ServiceStateChangeListener {
+	private static class EventRelayListener<C extends StatechartExecution<C>> {
 		private final C m_execution;
 		private final String m_execId;
 		
@@ -169,14 +168,14 @@ public abstract class ServiceExecutionState<C extends StatechartExecution<C>> ex
 			m_execId = execId;
 		}
 		
-		@Override
-		public void onStateChanged(Service target, ServiceState fromState, ServiceState toState) {
-			if ( fromState == ServiceState.RUNNING ) {
-				EventBuilder builder = new EventBuilder(ServiceStateChangeEvent.class);
-				builder.setProperty(ServiceStateChangeEvent.PROP_TAG, m_execId);
-				builder.setProperty(ServiceStateChangeEvent.PROP_FROM_STATE, fromState);
-				builder.setProperty(ServiceStateChangeEvent.PROP_TO_STATE, toState);
-				m_execution.receiveEvent(builder.build());
+		@Subscribe
+		public void onStateChanged(ServiceStateChangeEvent event) {
+			if ( event.getFromState() == ServiceState.RUNNING ) {
+				ServiceStateChangeEvent tagged = new ServiceStateChangeEvent(event.getService(),
+																		event.getFromState(),
+																		event.getToState(),
+																		m_execId);
+				m_execution.receiveEvent(tagged);
 			}
 		}
 	}
