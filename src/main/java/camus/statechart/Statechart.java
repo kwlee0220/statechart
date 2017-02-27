@@ -70,7 +70,7 @@ public class Statechart<C extends StatechartExecution<C>> {
 		return found;
 	}
 	
-	public State<C> locateState(State<C> fromState, String path) throws StateNotFoundException {
+	public State<C> traverse(State<C> fromState, String path) throws StateNotFoundException {
 		State<C> current = fromState;
 
 		int idx = 0;
@@ -90,7 +90,7 @@ public class Statechart<C extends StatechartExecution<C>> {
 				throw new StateNotFoundException("LUID=" + head);
 			}
 			else {
-				throw new RuntimeException("ambiguous state id=" + head);
+				throw new IllegalArgumentException("ambiguous state id=" + head);
 			}
 		}
 
@@ -103,7 +103,7 @@ public class Statechart<C extends StatechartExecution<C>> {
 			}
 			else if ( parts.get(idx).equals(".") ) { }
 			else {
-				current = current.getParentState().getChildState(parts.get(idx));
+				current = current.getChildState(parts.get(idx));
 			}
 		}
 		

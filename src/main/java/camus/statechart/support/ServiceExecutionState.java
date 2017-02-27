@@ -47,7 +47,7 @@ public abstract class ServiceExecutionState<C extends StatechartExecution<C>> ex
 	 * @param context		상태차트 수행 문맥
 	 * @return	다음으로 이전할 상태 객체.
 	 */
-	protected abstract State<C> getNextStateIfStopped(C context);
+	protected abstract String getNextStateIfStopped(C context);
 	
 	/**
 	 * {@link Service} 태스크 상태 중에 태스크가 오류가 발생한 경우, 다음으로
@@ -60,7 +60,7 @@ public abstract class ServiceExecutionState<C extends StatechartExecution<C>> ex
 	 * @param failureCause	발생된 오류 예외 객체.
 	 * @return	다음으로 이전할 상태 객체.
 	 */
-	protected abstract State<C> getNextStateIfFailed(C context, Throwable failureCause);
+	protected abstract String getNextStateIfFailed(C context, Throwable failureCause);
 
 	/**
 	 * {@link Service} 작업을 수행하는 상태 객체를 생성한다.
@@ -108,7 +108,7 @@ public abstract class ServiceExecutionState<C extends StatechartExecution<C>> ex
 	}
 
 	@Override
-	public State<C> enter(C context) {
+	public String enter(C context) {
 		Preconditions.checkState(m_svc != null, "Service has not been set");
 		try {
 			m_svc.addStateChangeListener(new EventRelayListener<>(context, m_execId));
@@ -131,12 +131,12 @@ public abstract class ServiceExecutionState<C extends StatechartExecution<C>> ex
 	}
 
 	@Override
-	public State<C> handleEvent(C context, Event event) {
+	public String handleEvent(C context, Event event) {
 		if ( event instanceof ServiceStateChangeEvent ) {
 			ServiceStateChangeEvent ssce = (ServiceStateChangeEvent)event;
 			
 			if ( !ssce.getTag().equals(m_execId) ) {
-				return State.STOP_PROPAGATE;
+				return State.STOP_PROPAGATE_GUID;
 			}
 			
 			if ( ssce.getToState() == ServiceState.STOPPED ) {

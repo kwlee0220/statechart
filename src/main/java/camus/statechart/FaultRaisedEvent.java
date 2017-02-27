@@ -47,7 +47,7 @@ public class FaultRaisedEvent extends StatechartEvent {
 	public String toString() {
     	String evName = getLastComponent(m_event.getEventTypeIds()[0], '.');
 
-		return String.format("FaultRaised[event=%s,thrower=%s,to=%s,case=%s,fault=%s]",
+		return String.format("FaultRaised: event=%s,thrower=%s,to=%s,case=%s,fault=%s",
 							evName, m_throwStateId, m_toStateId, "" + m_faultCase, "" + m_fault);
 	}
 }

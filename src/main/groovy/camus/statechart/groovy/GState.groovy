@@ -2,7 +2,6 @@ package camus.statechart.groovy
 
 import camus.statechart.State
 import camus.statechart.StateNotFoundException
-import camus.statechart.Statechart
 import camus.statechart.StatechartExecution
 import camus.statechart.support.AbstractState
 
@@ -16,15 +15,10 @@ import event.Event
 class GState<C extends StatechartExecution<C>> extends AbstractState<C> implements State<C> {
 	Closure entry
 	Closure exit
-	List<Transition> transitions = []
+	List<GTransition> transitions = []
 	
-	GState(Statechart schart, State parentState, String guid, boolean keepHistory,
-			String exceptionChildStateId) {
-		super(schart, parentState, guid, keepHistory, exceptionChildStateId)
-	}
-	
-	GState getAt(String path) {
-		traverse(path)
+	GState(State parentState, String guid, boolean keepHistory, String exceptionChildStateId) {
+		super(parentState, guid, keepHistory, exceptionChildStateId)
 	}
 	
 	GState div(String rel) {
@@ -47,8 +41,8 @@ class GState<C extends StatechartExecution<C>> extends AbstractState<C> implemen
 	}
 
 	@Override
-	public State<C> enter(C context) {
-		(entry) ? entry.call() : null
+	public String enter(C context) {
+		(entry) ? entry.call(context) : null
 	}
 
 	@Override
@@ -59,39 +53,23 @@ class GState<C extends StatechartExecution<C>> extends AbstractState<C> implemen
 	}
 
 	@Override
-	public State<C> handleEvent(C context, Event event) {
-		for ( Transition trans: transitions ) {
-			def matched = trans.cond(context, event)
+	public String handleEvent(C context, Event event) {
+		for ( GTransition trans: transitions ) {
+			if ( trans.eventClass ) {
+				if ( !event.isInstanceOf(trans.eventClass) ) {
+					continue;
+				}
+			}
+			
+			def matched = trans.cond ? trans.cond.call(context, event) : true
 			if ( matched ) {
 				def result = (trans.action) ? trans.action(context, event) : null
 				if ( result instanceof String && result.length() > 0 ) {
 					return result as String
 				}
-				return trans.toStateId
 			}
 		}
 		
 		return null;
-	}
-}
-
-class Transition {
-	Closure cond
-	Closure action
-	String toStateId
-	
-	def when(Closure condExpr) {
-		this.cond = condExpr
-		this
-	}
-	
-	def then(Closure actionExpr) {
-		action = actionExpr;
-		this
-	}
-	
-	def moveTo(String targetStateId) {
-		toStateId = targetStateId;
-		this
 	}
 }

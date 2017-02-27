@@ -10,6 +10,7 @@ import event.Event;
  */
 public interface State<C extends StatechartExecution<C>> {
 	public static final String FINISH_STATE_GUID = "/finished";
+	public static final String STOP_PROPAGATE_GUID = "$$stop_propagate";
 	
 	public State<C> getParentState();
 	public String getGuid();
@@ -32,66 +33,9 @@ public interface State<C extends StatechartExecution<C>> {
 	
 	public State<C> getExceptionState();
 	
-	public default State<C> enter(C context) {
+	public default String enter(C context) {
 		return null;
 	}
 	public default void leave(C context) { }
-	public State<C> handleEvent(C context, Event event);
-	
-	public static final State STOP_PROPAGATE = new State() {
-		@Override
-		public State getParentState() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public String getGuid() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public String getLuid() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public State getInitialChildState() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public State getChildState(String luid) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public Collection<State> getChildStates() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public boolean isAncestorOf(State state) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public State getRecentChildState() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public void setRecentChildState(String stateId) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public State getExceptionState() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public State handleEvent(StatechartExecution context, Event event) {
-			return null;
-		}
-	};
+	public String handleEvent(C context, Event event);
 }

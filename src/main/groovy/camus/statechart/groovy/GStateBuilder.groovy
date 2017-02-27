@@ -1,5 +1,7 @@
 package camus.statechart.groovy
 
+import groovy.lang.Closure
+
 /**
  * 
  * @author Kang-Woo Lee (ETRI)
@@ -8,14 +10,13 @@ class GStateBuilder {
 	String guid, luid
 	Closure entry, exit
 	List<GStateBuilder> childStateBuilders = []
-	List<Transition> transitions = []
+	List<GTransition> transitions = []
 	
 	String defaultStateId
 	boolean keepHistory
-	String recentChildStateId
 	String exceptionChildStateId
 	
-	Transition trans
+	GTransition currentTransition
 	
 	GStateBuilder(GStateBuilder parent, String luid) {
 		this.luid = luid
@@ -31,7 +32,7 @@ class GStateBuilder {
 	}
 	
 	def GState build(GState parent) {
-		GState state = new GState(parent, guid, luid)
+		GState state = new GState(parent, guid, keepHistory, exceptionChildStateId)
 		state.entry = entry
 		state.exit = exit
 		if ( childStateBuilders.empty ) {
@@ -47,10 +48,6 @@ class GStateBuilder {
 			}
 		}
 		state.transitions = transitions
-
-		state.keepHistory = keepHistory
-		state.exceptionChildState = exceptionChildStateId
-									? state.childStates[exceptionChildStateId] : null
 		
 		state
 	}
@@ -87,28 +84,24 @@ class GStateBuilder {
 		this.exit = decl
 	}
 	
+	def on(Map args) {
+		if ( currentTransition != null ) {
+			throw new IllegalStateException("last transition has not been registered")
+		}
+		
+		currentTransition = new GTransition(this)
+		currentTransition.eventClass = args.event
+		currentTransition
+	}
+	
 	def when(Closure decl) {
-		trans = new Transition()
-		trans.cond = decl
-		this
+		currentTransition = new GTransition(this)
+		currentTransition.cond = decl
+		currentTransition
 	}
 	
 	def then(Closure decl) {
-		trans.action = decl
-		this
-	}
-	
-	def transit(args) {
-		trans.toStateId = args.to
-		transitions << trans
-		trans = null
-		this
-	}
-	
-	def stay() {
-		transitions << trans
-		trans = null
-		this
+		currentTransition.then(decl)
 	}
 	
 	public String propertyMissing(String name) {

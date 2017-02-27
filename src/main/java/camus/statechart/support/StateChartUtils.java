@@ -15,7 +15,7 @@ public class StateChartUtils {
 	
 	public static final String toLuid(String guid) {
 		String[] parts = toIdParts(guid);
-		return parts[parts.length-1];
+		return parts.length > 0 ? parts[parts.length-1] : "";
 	}
 
 	public static <C extends StatechartExecution<C>> State<C> traverse(Statechart<C> schart,

@@ -18,6 +18,6 @@ public class StateEnteredEvent extends StatechartEvent {
 
 	@Override
 	public String toString() {
-		return String.format("Entered[state=%s]", m_stateId);
+		return String.format("Entered: state[%s]", m_stateId);
 	}
 }

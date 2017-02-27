@@ -10,8 +10,6 @@ import camus.statechart.StatechartExecution
  * @author Kang-Woo Lee (ETRI)
  */
 class GStatechart<C extends StatechartExecution<C>> extends Statechart<C> {
-	final GState rootState
-	
 	public static StatechartBuilder builder(Map args, Closure decl) {
 		new StatechartBuilder(args, decl)
 	}
@@ -21,7 +19,7 @@ class GStatechart<C extends StatechartExecution<C>> extends Statechart<C> {
 	}
 	
 	GStatechart(GState root) {
-		this.rootState = root
+		super(root);
 	}
 
 	@Override
@@ -49,7 +47,7 @@ class GStatechart<C extends StatechartExecution<C>> extends Statechart<C> {
 		return found;
 	}
 	
-	public GState locateState(GState fromState, String path) throws StateNotFoundException {
+	public GState traverse(GState fromState, String path) throws StateNotFoundException {
 		GState current = fromState;
 
 		int idx = 0;

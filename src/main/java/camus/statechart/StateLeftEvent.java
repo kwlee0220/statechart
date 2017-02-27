@@ -8,7 +8,7 @@ package camus.statechart;
 public class StateLeftEvent extends StatechartEvent {
 	private final String m_stateId;
 
-	public StateLeftEvent(State state) {
+	public StateLeftEvent(State<?> state) {
 		m_stateId = state.getGuid();
 	}
 
@@ -18,6 +18,6 @@ public class StateLeftEvent extends StatechartEvent {
 
 	@Override
 	public String toString() {
-		return String.format("Left[state=%s]", m_stateId);
+		return String.format("Left: state[%s]", m_stateId);
 	}
 }

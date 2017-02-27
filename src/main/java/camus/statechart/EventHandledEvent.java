@@ -43,11 +43,11 @@ public class EventHandledEvent extends StatechartEvent {
     	}
     	
     	if ( m_toStateId != null ) {
-        	return String.format("EventHandled[event=%s:=%s -> %s]",
-					name, m_reactStateId, m_toStateId);
+        	return String.format("EventHandled: state[%s], event=%s, to=state[%s]",
+        						m_reactStateId, name, m_toStateId);
     	}
     	else {
-	    	return String.format("EventHandled[event=%s,%s]", name, m_reactStateId);
+	    	return String.format("EventHandled: state[%s], event=%s", m_reactStateId, name);
     	}
     }
 }

@@ -20,9 +20,9 @@ public class StatechartFinishedEvent extends StatechartEvent {
 		switch ( m_state ) {
 			case COMPLETED:
 			case CANCELLED:
-				return "Finished[state=" + m_state + "]";
+				return "Finished: " + m_state;
 			case FAILED:
-				return "Finished[state=" + m_state + ", fault=" + m_fault + "]";
+				return "Finished: " + m_state + ", fault=" + m_fault;
 			default:
 				throw new RuntimeException("invalid AOP state=" + m_state);
 		}

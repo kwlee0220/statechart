@@ -1,4 +1,4 @@
-package camus.statechart.support;
+package camus.statechart;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,11 +19,11 @@ import utils.thread.AsyncConsumer;
 class StatechartEventQueue implements EventSubscriber {
 	static final Logger s_logger = LoggerFactory.getLogger(StatechartEventQueue.class);
 
-	private final StatechartExecutor m_scExecutor;
+	private final StatechartExecution<?> m_scExec;
 	private final AsyncConsumer<Runnable> m_dispatcher;
 
-	StatechartEventQueue(StatechartExecutor scExec) {
-		m_scExecutor = scExec;
+	StatechartEventQueue(StatechartExecution<?> scExec) {
+		m_scExec = scExec;
 		m_dispatcher = AsyncConsumer.singleWorker(task -> {
 			try {
 				task.run();
@@ -63,7 +63,7 @@ class StatechartEventQueue implements EventSubscriber {
 		}
 		
 		public void run() {
-			m_scExecutor.handleEvent(m_event);
+			m_scExec.handleEvent(m_event);
 	    }
 		
 		public String toString() {
