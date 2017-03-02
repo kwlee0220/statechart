@@ -42,13 +42,22 @@ class GState<C extends StatechartExecution<C>> extends AbstractState<C> implemen
 
 	@Override
 	public String enter(C context) {
-		(entry) ? entry.call(context) : null
+		if ( entry ) {
+			def code = entry.rehydrate(context, null, null)
+			code.resolveStrategy = Closure.DELEGATE_ONLY
+			code.call()
+		}
+		else {
+			null
+		}
 	}
 
 	@Override
 	public void leave(C context) {
 		if ( exit ) {
-			exit.call(context)
+			def code = exit.rehydrate(context, null, null)
+			code.resolveStrategy = Closure.DELEGATE_ONLY
+			code.call()
 		}
 	}
 
@@ -61,10 +70,13 @@ class GState<C extends StatechartExecution<C>> extends AbstractState<C> implemen
 				}
 			}
 			
-//			def result = (trans.action) ? trans.action.call(context, event) : null
-			def result = trans.action.call(context, event)
-			if ( result instanceof String && result.length() > 0 ) {
-				return result as String
+			if ( trans.action ) {
+				def code = trans.action.rehydrate(context, null, null)
+				code.resolveStrategy = Closure.DELEGATE_ONLY
+				def result = code.call(event)
+				if ( result instanceof String && result.length() > 0 ) {
+					return result as String
+				}
 			}
 		}
 		

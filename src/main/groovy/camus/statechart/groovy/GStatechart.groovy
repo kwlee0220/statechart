@@ -5,17 +5,28 @@ import camus.statechart.StateNotFoundException
 import camus.statechart.Statechart
 import camus.statechart.StatechartExecution
 
+import org.codehaus.groovy.control.CompilerConfiguration
+
 /**
  * 
  * @author Kang-Woo Lee (ETRI)
  */
 class GStatechart<C extends StatechartExecution<C>> extends Statechart<C> {
-	public static StatechartBuilder builder(Map args, Closure decl) {
-		new StatechartBuilder(args, decl)
+	public static GStatechartBuilder builder(Map args, Closure decl) {
+		new GStatechartBuilder(args, decl)
 	}
 	
-	public static StatechartBuilder builder(Closure decl) {
-		StatechartBuilder bldr = new StatechartBuilder([:], decl)
+	public static GStatechartBuilder builder(Closure decl) {
+		GStatechartBuilder bldr = new GStatechartBuilder([:], decl)
+	}
+	
+	public static GStatechart from(File scriptFile) {
+		def configuration = new CompilerConfiguration()
+		configuration.scriptBaseClass = GStatechartScript.name
+		
+		new GroovyShell(configuration)
+			.evaluate(scriptFile)
+			.build()
 	}
 	
 	GStatechart(GState root) {

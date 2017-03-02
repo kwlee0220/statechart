@@ -84,7 +84,15 @@ class GStateBuilder {
 		this.exit = decl
 	}
 	
-	def on(eventClass, Closure decl) {
+	def on(eventExpr, Closure decl) {
+		def eventClass = null
+		if ( eventExpr instanceof String ) {
+			eventClass = Class.forName(eventExpr)
+		}
+		else if ( eventExpr instanceof Class ) {
+			eventClass = (Class)eventExpr
+		}
+		
 		transitions << new GTransition(eventClass:eventClass, action:decl)
 	}
 	

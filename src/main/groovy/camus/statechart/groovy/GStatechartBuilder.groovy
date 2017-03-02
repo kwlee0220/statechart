@@ -10,10 +10,10 @@ import groovy.transform.InheritConstructors
  * @author Kang-Woo Lee (ETRI)
  */
 @InheritConstructors
-class StatechartBuilder {
+class GStatechartBuilder {
 	GStateBuilder stateBuilder
 	
-	StatechartBuilder(Map args, Closure decl) {
+	GStatechartBuilder(Map args, Closure decl) {
 		stateBuilder = new GStateBuilder(null, "");
 		stateBuilder.with decl
 	}
