@@ -84,24 +84,12 @@ class GStateBuilder {
 		this.exit = decl
 	}
 	
-	def on(Map args) {
-		if ( currentTransition != null ) {
-			throw new IllegalStateException("last transition has not been registered")
-		}
-		
-		currentTransition = new GTransition(this)
-		currentTransition.eventClass = args.event
-		currentTransition
+	def on(eventClass, Closure decl) {
+		transitions << new GTransition(eventClass:eventClass, action:decl)
 	}
 	
-	def when(Closure decl) {
-		currentTransition = new GTransition(this)
-		currentTransition.cond = decl
-		currentTransition
-	}
-	
-	def then(Closure decl) {
-		currentTransition.then(decl)
+	def on(Closure decl) {
+		transitions << new GTransition(action:decl)
 	}
 	
 	public String propertyMissing(String name) {

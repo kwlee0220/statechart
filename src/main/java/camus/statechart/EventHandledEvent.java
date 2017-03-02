@@ -2,6 +2,7 @@ package camus.statechart;
 
 
 import event.Event;
+import event.support.EventUtils;
 import net.jcip.annotations.Immutable;
 
 
@@ -36,18 +37,14 @@ public class EventHandledEvent extends StatechartEvent {
 
     @Override
     public String toString() {
-    	String name = m_event.getEventTypeIds()[0];
-    	int idx = name.lastIndexOf('.');
-    	if ( idx >= 0 ) {
-    		name = name.substring(idx+1);
-    	}
+    	String eventStr = EventUtils.toString(m_event);
     	
     	if ( m_toStateId != null ) {
         	return String.format("EventHandled: state[%s], event=%s, to=state[%s]",
-        						m_reactStateId, name, m_toStateId);
+        						m_reactStateId, eventStr, m_toStateId);
     	}
     	else {
-	    	return String.format("EventHandled: state[%s], event=%s", m_reactStateId, name);
+	    	return String.format("EventHandled: state[%s], event=%s", m_reactStateId, eventStr);
     	}
     }
 }

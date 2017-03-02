@@ -61,12 +61,10 @@ class GState<C extends StatechartExecution<C>> extends AbstractState<C> implemen
 				}
 			}
 			
-			def matched = trans.cond ? trans.cond.call(context, event) : true
-			if ( matched ) {
-				def result = (trans.action) ? trans.action(context, event) : null
-				if ( result instanceof String && result.length() > 0 ) {
-					return result as String
-				}
+//			def result = (trans.action) ? trans.action.call(context, event) : null
+			def result = trans.action.call(context, event)
+			if ( result instanceof String && result.length() > 0 ) {
+				return result as String
 			}
 		}
 		
