@@ -32,7 +32,8 @@ import event.Event;
  * 
  * @author Kang-Woo Lee
  */
-public abstract class ServiceExecutionState<C extends StatechartExecution<C>> extends AbstractState<C> {
+public abstract class ServiceExecutionState<C extends StatechartExecution<C>>
+																		extends AbstractState<C> {
 	private volatile Service m_svc;
 	private volatile String m_execId;
 	private final AtomicInteger m_execIdGen = new AtomicInteger(0);
