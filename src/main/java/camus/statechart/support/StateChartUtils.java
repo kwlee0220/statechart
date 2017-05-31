@@ -1,8 +1,8 @@
 package camus.statechart.support;
 
 import camus.statechart.State;
-import camus.statechart.StatechartExecution;
 import camus.statechart.Statechart;
+import camus.statechart.StatechartExecution;
 
 /**
  * 

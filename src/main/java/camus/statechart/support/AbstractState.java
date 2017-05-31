@@ -4,9 +4,9 @@ import java.util.Collection;
 import java.util.Map;
 
 import camus.statechart.State;
-import camus.statechart.StatechartExecution;
 import camus.statechart.StateExistsException;
 import camus.statechart.StateNotFoundException;
+import camus.statechart.StatechartExecution;
 
 import com.google.common.collect.Maps;
 
