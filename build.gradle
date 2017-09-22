@@ -17,8 +17,6 @@ repositories {
 
 dependencies {
 	childProjects.values().each { compile it }
-	
-	compile "org.codehaus.groovy:groovy-all:${groovy_version}"
 }
 
 task sourceJar(type: Jar) {
