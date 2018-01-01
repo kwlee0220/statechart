@@ -57,7 +57,7 @@ public class StatechartExecution<C extends StatechartExecution<C>> extends Abstr
 	 * 상태차트 수행 중에 현재 상태 객체를 반환한다.
 	 */
 	public State<C> getCurrentState() {
-		return Lambdas.guraded(m_scLock, ()-> {
+		return Lambdas.guardedGet(m_scLock, ()-> {
 			return (m_path.size() > 0) ? m_path.get(m_path.size()-1) : null;
 		});
 	}
@@ -65,7 +65,7 @@ public class StatechartExecution<C extends StatechartExecution<C>> extends Abstr
 	@Override
 	public void receiveEvent(Event event) {
 		if ( isRunning() ) {
-			Lambdas.guraded(m_scLock, ()->m_eventQueue.receiveEvent(event));
+			Lambdas.guradedRun(m_scLock, ()->m_eventQueue.receiveEvent(event));
 		}
 	}
 
