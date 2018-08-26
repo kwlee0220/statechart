@@ -53,7 +53,7 @@ class StatechartEventQueue implements EventSubscriber {
 		private final Event m_event;
 		
 		EventDeliveryAction(Event event) {
-			Preconditions.checkNotNull(event, "Event was null");
+			Objects.requireNonNull(event, "Event was null");
 			
 			m_event = event;
 		}
