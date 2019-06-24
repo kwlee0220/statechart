@@ -16,7 +16,7 @@ import async.support.AbstractService;
 import event.Event;
 import event.EventSubscriber;
 import net.jcip.annotations.GuardedBy;
-import utils.Guards;
+import utils.Guard;
 import utils.Utilities;
 
 
@@ -30,7 +30,7 @@ public class StatechartExecution<C extends StatechartExecution<C>> extends Abstr
     private static final Logger s_logger = LoggerFactory.getLogger(StatechartExecution.class);
 
 	private final Statechart<C> m_schart;
-	private final ReentrantLock m_scLock = new ReentrantLock();
+	private final Guard m_scGuard = Guard.by(new ReentrantLock());
 	private final StatechartEventQueue m_eventQueue;
 	@GuardedBy("m_scLock") private final List<State<C>> m_path;
 	@GuardedBy("m_scLock") private final EventBus m_eventBus;
@@ -57,7 +57,7 @@ public class StatechartExecution<C extends StatechartExecution<C>> extends Abstr
 	 * 상태차트 수행 중에 현재 상태 객체를 반환한다.
 	 */
 	public State<C> getCurrentState() {
-		return Guards.get(m_scLock, ()-> {
+		return m_scGuard.get(()-> {
 			return (m_path.size() > 0) ? m_path.get(m_path.size()-1) : null;
 		});
 	}
@@ -65,13 +65,13 @@ public class StatechartExecution<C extends StatechartExecution<C>> extends Abstr
 	@Override
 	public void receiveEvent(Event event) {
 		if ( isRunning() ) {
-			Guards.run(m_scLock, ()->m_eventQueue.receiveEvent(event));
+			m_scGuard.run(()->m_eventQueue.receiveEvent(event));
 		}
 	}
 
 	@Override
 	protected void startService() throws Exception {
-		m_scLock.lock();
+		m_scGuard.lock();
 		try {
 			notifyScEventInGuard(new StatechartStartedEvent(m_schart));
 	
@@ -96,39 +96,21 @@ public class StatechartExecution<C extends StatechartExecution<C>> extends Abstr
 			}
 		}
 		finally {
-			m_scLock.unlock();
+			m_scGuard.unlock();
 		}
 	}
 	
 	@Override
 	protected void stopService() {
-		m_scLock.lock();
-		try {
-			stopInGuard(AsyncOperationState.COMPLETED, null);
-		}
-		finally {
-			m_scLock.unlock();
-		}
+		m_scGuard.run(() -> stopInGuard(AsyncOperationState.COMPLETED, null));
 	}
 
 	public void addStatechartListener(Object listener) {
-		m_scLock.lock();
-		try {
-			m_eventBus.register(listener);
-		}
-		finally {
-			m_scLock.unlock();
-		}
+		m_scGuard.run(() -> m_eventBus.register(listener));
 	}
 
 	public void removeStatechartListener(Object listener) {
-		m_scLock.lock();
-		try {
-			m_eventBus.unregister(listener);
-		}
-		finally {
-			m_scLock.unlock();
-		}
+		m_scGuard.run(() -> m_eventBus.unregister(listener));
 	}
 
 	public String toString() {
@@ -146,7 +128,7 @@ public class StatechartExecution<C extends StatechartExecution<C>> extends Abstr
 			return;
 		}
 		
-		m_scLock.lock();
+		m_scGuard.lock();
 		try {
 			int idx = m_path.size() -1;
 	
@@ -205,7 +187,7 @@ public class StatechartExecution<C extends StatechartExecution<C>> extends Abstr
 			}
 		}
 		finally {
-			m_scLock.unlock();
+			m_scGuard.unlock();
 		}
 	}
 
