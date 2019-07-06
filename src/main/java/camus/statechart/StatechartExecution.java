@@ -84,7 +84,7 @@ public class StatechartExecution<C extends StatechartExecution<C>> extends Abstr
 			if ( m_path.get(m_path.size()-1).isFinal() ) {
 				final State<C> s = m_path.get(m_path.size()-1);
 				
-				Utilities.executeAsynchronously(getExecutor(), () -> {
+				Utilities.runAsync(getExecutor(), () -> {
 					if ( s instanceof FinalState ) {
 						FinalState fs = (FinalState)s;
 						stopInGuard(fs.getAsyncOperationState(), fs.getFailureCause());
