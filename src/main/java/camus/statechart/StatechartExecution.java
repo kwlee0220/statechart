@@ -16,8 +16,8 @@ import async.support.AbstractService;
 import event.Event;
 import event.EventSubscriber;
 import net.jcip.annotations.GuardedBy;
-import utils.Guard;
 import utils.Utilities;
+import utils.async.Guard;
 
 
 
