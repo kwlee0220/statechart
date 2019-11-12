@@ -3,6 +3,8 @@ package camus.statechart;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
+import javax.annotation.concurrent.GuardedBy;
+
 import camus.statechart.support.StateChartUtils;
 
 import org.slf4j.Logger;
@@ -15,7 +17,6 @@ import async.AsyncOperationState;
 import async.support.AbstractService;
 import event.Event;
 import event.EventSubscriber;
-import net.jcip.annotations.GuardedBy;
 import utils.Utilities;
 import utils.async.Guard;
 

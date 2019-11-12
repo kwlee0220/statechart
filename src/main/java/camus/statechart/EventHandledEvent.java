@@ -1,10 +1,9 @@
 package camus.statechart;
 
+import javax.annotation.concurrent.Immutable;
 
 import event.Event;
 import event.support.EventUtils;
-import net.jcip.annotations.Immutable;
-
 
 
 /**
